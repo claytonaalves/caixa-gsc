@@ -12,12 +12,22 @@ from zeep.transports import Transport
 
 DATE_FORMAT = "%Y%m%d%H%M%S"
 
+# Ambientes
+PRODUCAO = 1
+HOMOLOGACAO = 2
+
+URL_HOMOLOGACAO = "https://sigscint.caixa.gov.br/arsys/WSDL/public/arsapphmp-int.caixa/GSC_RF010_FornecedorExterno_V401_WS"
+URL_PRODUCAO = "https://sigscext.caixa.gov.br/arsys/WSDL/public/arsapp-int.caixa/GSC_RF010_FornecedorExterno_V401_WS"
+
 
 class Webservice:
-    URL = "https://sigscint.caixa.gov.br/arsys/WSDL/public/arsapphmp-int.caixa/GSC_RF010_FornecedorExterno_V401_WS"
 
     def __init__(self, config):
         self.config = config
+        if self.config["ambiente"] == PRODUCAO:
+            self.url = URL_PRODUCAO
+        else:
+            self.url = URL_HOMOLOGACAO
 
     def create_header(self):
         header = xsd.Element(
@@ -34,15 +44,15 @@ class Webservice:
         session = Session()
         session.verify = False
         transport = Transport(session=session)
-        return Client(self.URL, transport=transport)
+        return Client(self.url, transport=transport)
 
-    def getlist_abertura(self):
+    def getlist_abertura(self, start_record="", max_limit=""):
         header_value = self.create_header()
         client = self.create_client()
         return client.service.GetList_Abertura(
             self.config['cpy'],
             self.config['token'],
-            "", "", "",
+            "", start_record, max_limit,
             _soapheaders=[header_value]
         )
 
