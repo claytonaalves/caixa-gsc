@@ -9,12 +9,14 @@ from requests import Session
 from zeep import xsd
 from zeep import Client
 from zeep.transports import Transport
+from zeep.helpers import serialize_object
+from zeep.exceptions import TransportError
 
 DATE_FORMAT = "%Y%m%d%H%M%S"
 
 # Ambientes
-PRODUCAO = 1
-HOMOLOGACAO = 2
+PRODUCAO = '1'
+HOMOLOGACAO = '2'
 
 URL_HOMOLOGACAO = "https://sigscint.caixa.gov.br/arsys/WSDL/public/arsapphmp-int.caixa/GSC_RF010_FornecedorExterno_V401_WS"
 URL_PRODUCAO = "https://sigscext.caixa.gov.br/arsys/WSDL/public/arsapp-int.caixa/GSC_RF010_FornecedorExterno_V401_WS"
@@ -46,30 +48,35 @@ class Webservice:
         transport = Transport(session=session)
         return Client(self.url, transport=transport)
 
-    def getlist_abertura(self, start_record="", max_limit=""):
-        header_value = self.create_header()
-        client = self.create_client()
-        return client.service.GetList_Abertura(
-            self.config['cpy'],
-            self.config['token'],
-            "", start_record, max_limit,
-            _soapheaders=[header_value]
-        )
-
-    def getlist_reiteracao(self):
-        header_value = self.create_header()
-        client = self.create_client()
-        return client.service.GetList_Reiteracao(
-            self.config['cpy'],
-            self.config['token'],
-            _soapheaders=[header_value]
-        )
-
     def envia_aceite(self, chamado):
         return self.set_aceite_recusa(chamado, '1')
 
     def envia_recusa(self, chamado):
         return self.set_aceite_recusa(chamado, '2')
+
+    def envia_conclusao(self, chamado):
+        return self.envia_atualizacao(chamado, tipo='5')
+
+    def getlist_abertura(self, start_record="", max_limit=""):
+        header_value = self.create_header()
+        client = self.create_client()
+        response = client.service.GetList_Abertura(
+            self.config['cpy'],
+            self.config['token'],
+            "", start_record, max_limit,
+            _soapheaders=[header_value]
+        )
+        return serialize_object(response)
+
+    def getlist_reiteracao(self):
+        header_value = self.create_header()
+        client = self.create_client()
+        response = client.service.GetList_Reiteracao(
+            self.config['cpy'],
+            self.config['token'],
+            _soapheaders=[header_value]
+        )
+        return serialize_object(response)
 
     def set_aceite_recusa(self, chamado, tipo_retorno):
         data_atual = datetime.now().strftime(DATE_FORMAT)
@@ -88,14 +95,14 @@ class Webservice:
                 },
                 'retorno': {
                     'codigodobanco': '104',
-                    'chamado_fornecedor': chamado.id,
+                    'chamado_fornecedor': chamado.chamado_id,
                     'previsaoatendimento': chamado.previsao_atendimento.strftime(DATE_FORMAT),
                     'responsavelatendimento': chamado.responsavel,
                     'tipo_retorno': tipo_retorno,  # 1=aceite; 2=recusa
-                    'descricao': chamado.descricao_retorno,
+                    'descricao': chamado.descricao,
                     'chamado_caixa': {
-                        'no_req': chamado.req,
-                        'no_wo': chamado.wo,
+                        'no_req': chamado.no_req,
+                        'no_wo': chamado.no_wo,
                     }
                 }
             }
@@ -120,12 +127,12 @@ class Webservice:
                 },
                 'retorno': {
                     'codigodobanco': '104',
-                    'chamado_fornecedor': chamado.id,
+                    'chamado_fornecedor': chamado.chamado_id,
                     'tipo_retorno': tipo,  # 1 = Atualizacao, 2 = Agendamento
                     'descricao': chamado.descricao,  # limite de 240 caracteres
                     'chamado_caixa': {
-                        'no_req': chamado.req,
-                        'no_wo': chamado.wo,
+                        'no_req': chamado.no_req,
+                        'no_wo': chamado.no_wo,
                         # 'no_inc': '',
                         # 'no_crq': '',
                     }
