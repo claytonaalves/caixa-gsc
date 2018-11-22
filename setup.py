@@ -10,7 +10,13 @@ setup(
     packages=find_packages('src'),
     package_dir={'': 'src'},
     install_requires=[
-        'requests>=2.20.1',
+        'requests>=2.19.1',
         'zeep>=3.1.0'
+    ],
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Programming Language :: Python :: 3.6",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent"
     ]
 )
