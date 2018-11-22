@@ -108,7 +108,7 @@ class Webservice:
             }
             , _soapheaders=[header_value]
         )
-        return response
+        return serialize_object(response)
 
     def envia_atualizacao(self, chamado, tipo='1'):
         data_atual = datetime.now().strftime(DATE_FORMAT)
@@ -154,7 +154,7 @@ class Webservice:
             }
             , _soapheaders=[header_value]
         )
-        return response
+        return serialize_object(response)
 
 
 if __name__ == "__main__":
