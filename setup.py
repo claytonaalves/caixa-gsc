@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='caixa.gsc',
-    version='0.2',
+    version='0.2.1',
     description='Biblioteca de comunicação com os webservices de Gerenciamento de Serviços da Caixa Econômica',
     author='Clayton A. Alves',
     author_email='clayton.aa@gmail.com',
